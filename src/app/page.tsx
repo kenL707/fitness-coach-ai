@@ -9,6 +9,7 @@ import { SummaryCards } from "@/components/SummaryCards";
 import type { SummaryScope } from "@/components/SummaryPanel";
 import { WeeklyPlan, type PlanActions } from "@/components/WeeklyPlan";
 import { arrayMove } from "@dnd-kit/sortable";
+import { buildExampleSummary, buildSamplePlan } from "@/lib/sample";
 import { applyEstimates, dateFor, estimateKey, programBase, readableCompleted, summarySig, type ActivePlan, type Intake, type PlanDay, type PlanTask, type PlanWeek, type ProgramPlan, type ProgressSummary, type TaskEstimate } from "@/lib/fitness";
 
 const localToday = () => {
@@ -184,10 +185,25 @@ export default function Home() {
     return have;
   }, []);
 
+  const loadExample = useCallback(() => {
+    setActive(buildSamplePlan(localToday()));
+    setPlanKey((k) => k + 1);
+    setError(null);
+    setView("dashboard");
+  }, []);
+
   const generateSummary = useCallback(
     async (scope: SummaryScope, weekNumber: number) => {
       if (!active) return;
       const key = scope === "week" ? `week-${weekNumber}` : "to-date";
+      if (active.example) {
+        // The example plan never calls the AI: its summaries are worked out locally from the sample data.
+        const asOf = localToday();
+        const summary = buildExampleSummary(active, scope, weekNumber, asOf);
+        const sig = summarySig(active.plan, active.intake, scope, weekNumber, asOf);
+        setActive((cur) => cur && { ...cur, summaries: { ...cur.summaries, [key]: { ...summary, sig } } });
+        return;
+      }
       if (inFlight.current.has(key)) return;
       inFlight.current.add(key);
       setSummaryLoading([...inFlight.current]);
@@ -288,6 +304,11 @@ export default function Home() {
       {loading && <LoadingSkeleton />}
       {view === "dashboard" && active && !loading && (
         <div className="space-y-6">
+          {active.example && (
+            <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+              This is an example plan. Tick tasks and open the summaries to try it, or click New plan to build your own.
+            </p>
+          )}
           <SummaryCards active={active} />
           <WeeklyPlan
             key={planKey}
@@ -300,7 +321,7 @@ export default function Home() {
       {/* Stay mounted while loading so a failed request doesn't wipe what the user typed. */}
       {view === "intake" && (
         <div hidden={loading}>
-          <IntakeForm loading={loading} onSubmit={generate} />
+          <IntakeForm loading={loading} onSubmit={generate} onExample={loadExample} />
         </div>
       )}
       <ConfirmDialog

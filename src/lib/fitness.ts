@@ -246,6 +246,8 @@ export interface ActivePlan {
   plan: ProgramPlan;
   intake: Intake;
   summaries?: Record<string, ProgressSummary>;
+  /** The built-in example plan: its summaries are computed locally instead of by the model. */
+  example?: boolean;
 }
 
 /* ---------- Schedule helpers ---------- */

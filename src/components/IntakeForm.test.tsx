@@ -271,3 +271,20 @@ describe("after a failed submit", () => {
     expect(scrolled).toHaveLength(0);
   });
 });
+
+describe("example plan link", () => {
+  it("shows only when the page provides it, and calls it without submitting the form", async () => {
+    const user = userEvent.setup({ delay: null });
+    const onExample = vi.fn();
+    const onSubmit = vi.fn();
+    const { unmount } = render(<IntakeForm loading={false} onSubmit={onSubmit} onExample={onExample} />);
+    await user.click(screen.getByRole("button", { name: /see an example plan/i }));
+    expect(onExample).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument(); // no validation banner either
+    unmount();
+
+    render(<IntakeForm loading={false} onSubmit={onSubmit} />);
+    expect(screen.queryByRole("button", { name: /see an example plan/i })).not.toBeInTheDocument();
+  });
+});

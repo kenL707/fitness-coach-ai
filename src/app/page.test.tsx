@@ -213,3 +213,57 @@ describe("dashboard: Monday-to-Sunday weeks", () => {
     expect(stored().intake.weekAnchor).toBeUndefined();
   });
 });
+
+describe("example plan", () => {
+  // Wednesday Oct 28, 2026: week 3 of the sample.
+  beforeEach(() => {
+    vi.setSystemTime(new Date("2026-10-28T09:00:00"));
+  });
+
+  it("opens from the intake form without any network call and shows progress", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const user = userEvent.setup({ delay: null });
+    render(<Home />);
+    await user.click(await screen.findByRole("button", { name: /see an example plan/i }));
+
+    expect(await screen.findByText("Half Marathon Base Builder")).toBeInTheDocument();
+    expect(screen.getByText(/This is an example plan/)).toBeInTheDocument();
+    expect(screen.getByText("Week 3 of 4")).toBeInTheDocument(); // opens on this week
+    expect(screen.getByText("Wednesday, October 28")).toBeInTheDocument(); // ...on today, which always has tasks
+    expect(screen.getAllByLabelText("Task name").length).toBeGreaterThan(0);
+    expect(stored().example).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it("builds both summaries locally, refreshes them when you tick a task, and never calls the API", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const user = userEvent.setup({ delay: null });
+    render(<Home />);
+    await user.click(await screen.findByRole("button", { name: /see an example plan/i }));
+    await screen.findByText("Half Marathon Base Builder");
+
+    await user.click(screen.getByRole("button", { name: "Weekly summary" }));
+    await user.click(screen.getByRole("button", { name: "Summary since start date" }));
+    expect(await screen.findByText("Since 10-12-2026")).toBeInTheDocument();
+    expect(screen.getAllByText(/Total calories burned/)).toHaveLength(2);
+    expect(screen.getAllByText(/example summary/i).length).toBeGreaterThan(0);
+
+    const before = screen.getAllByText(/of \d+ completed/).map((e) => e.textContent);
+    await user.click(screen.getByRole("checkbox", { name: "Mark complete: Box squat to a comfortable depth" })); // today (Wednesday) is the strength day
+    await waitFor(() => expect(screen.getAllByText(/of \d+ completed/).map((e) => e.textContent)).not.toEqual(before), { timeout: 5000 });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it("New plan returns to the form and clears the example", async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<Home />);
+    await user.click(await screen.findByRole("button", { name: /see an example plan/i }));
+    await screen.findByText("Half Marathon Base Builder");
+    await user.click(screen.getByRole("button", { name: /New plan/ }));
+    await user.click(within(screen.getByRole("dialog", { hidden: true })).getByRole("button", { name: "Start new plan", hidden: true }));
+    expect(await screen.findByLabelText("Fitness Goal")).toBeInTheDocument();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+});

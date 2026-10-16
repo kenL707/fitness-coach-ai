@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 interface Props {
   loading: boolean;
   onSubmit: (intake: Intake) => void;
+  /** Opens a ready-made example plan (no AI call). */
+  onExample?: () => void;
 }
 
 const Optional = () => <span className="text-xs text-slate-400 font-normal">(Optional)</span>;
@@ -47,7 +49,7 @@ function Chunk({ icon: Icon, title, children }: { icon: typeof Target; title: st
   );
 }
 
-export function IntakeForm({ loading, onSubmit }: Props) {
+export function IntakeForm({ loading, onSubmit, onExample }: Props) {
   const [goal, setGoal] = useState("");
   const [startingPoint, setStartingPoint] = useState("");
   const [activities, setActivities] = useState<string[]>([]);
@@ -378,6 +380,12 @@ export function IntakeForm({ loading, onSubmit }: Props) {
         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
         {loading ? "Building your plan..." : "Generate Fitness Plan"}
       </button>
+      {onExample && (
+        <button type="button" onClick={onExample} disabled={loading}
+          className="mx-auto block text-sm text-slate-400 underline-offset-4 transition hover:text-emerald-300 hover:underline disabled:opacity-50">
+          or see an example plan
+        </button>
+      )}
     </form>
   );
 }
