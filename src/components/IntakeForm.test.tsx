@@ -300,3 +300,58 @@ describe("example plan link", () => {
     expect(screen.queryByRole("button", { name: /see an example plan/i })).not.toBeInTheDocument();
   });
 });
+
+describe("Enter key and wrapping fields", () => {
+  const filledForm = async () => {
+    const { onSubmit, user } = setup();
+    await user.type(goal(), "Run a 10k");
+    await user.click(day("Mon"));
+    await user.selectOptions(duration("Monday"), "30 minutes");
+    return { onSubmit, user };
+  };
+
+  it("does not submit the form when Enter is pressed in the goal or starting point", async () => {
+    const { onSubmit, user } = await filledForm();
+    await user.type(goal(), "{Enter}");
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(goal()).not.toHaveFocus(); // the edit is finished
+    expect((goal() as HTMLTextAreaElement).value).toBe("Run a 10k"); // and no line break was added
+
+    const start = screen.getByLabelText(/Starting Point/);
+    await user.type(start, "Beginner{Enter}");
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(start).not.toHaveFocus();
+  });
+
+  it("does not submit when Enter is pressed in the weight or start date boxes either", async () => {
+    const { onSubmit, user } = await filledForm();
+    const weight = screen.getByLabelText(/Current Weight/);
+    await user.type(weight, "165{Enter}");
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(weight).not.toHaveFocus();
+    expect((weight as HTMLInputElement).value).toBe("165");
+  });
+
+  it("still lets Enter add an activity in the 'Add another' box, and keeps focus there", async () => {
+    const { onSubmit, user } = setup();
+    const add = screen.getByLabelText("Add another activity");
+    await user.type(add, "Rowing{Enter}");
+    expect(screen.getByRole("button", { name: "Rowing" })).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(add).toHaveFocus();
+  });
+
+  it("only the Generate button submits", async () => {
+    const { onSubmit, user } = await filledForm();
+    await user.click(submit());
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("makes the goal and starting point wrapping fields, with the full placeholder kept", () => {
+    setup();
+    for (const el of [goal(), screen.getByLabelText(/Starting Point/)]) {
+      expect(el.tagName).toBe("TEXTAREA");
+      expect(el).toHaveAttribute("placeholder", expect.stringMatching(/^e\.g\., /));
+    }
+  });
+});

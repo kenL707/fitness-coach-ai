@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AlertCircle, CalendarDays, Loader2, Plus, Sparkles, Target, User } from "lucide-react";
+import { AutoGrowText } from "@/components/AutoGrowText";
 import { ACTIVITY_OPTIONS, DAYS, TIME_OPTIONS, WEEKS, clamp, isValidDateString, type DistanceUnit, type Intake } from "@/lib/fitness";
 import { cn } from "@/lib/utils";
 
@@ -188,7 +189,20 @@ export function IntakeForm({ loading, onSubmit, onExample }: Props) {
     );
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-5"
+      // Pressing Enter inside a text, number or date box finishes that edit instead of submitting the form.
+      // (Buttons keep their normal Enter behavior, and fields that handle Enter themselves are left alone.)
+      onKeyDown={(e) => {
+        const t = e.target;
+        if (e.key === "Enter" && !e.defaultPrevented && t instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit"].includes(t.type)) {
+          e.preventDefault();
+          t.blur();
+        }
+      }}
+    >
       {onExample && (
         <p className="text-sm text-slate-400">
           New here?{" "}
@@ -215,20 +229,21 @@ export function IntakeForm({ loading, onSubmit, onExample }: Props) {
       <Chunk icon={Target} title="Objective & Preferences">
         <div>
           <label htmlFor="goal" className={labelCls}>Fitness Goal</label>
-          <input id="goal" className={fieldCls(invalid.has("goal"))} value={goal} disabled={loading} maxLength={500}
+          {/* Wraps onto more lines as you type, so nothing runs off a phone screen. */}
+          <AutoGrowText id="goal" className={fieldCls(invalid.has("goal"))} value={goal} disabled={loading} maxLength={500}
             aria-invalid={invalid.has("goal")} aria-describedby={errors.goal ? "goal-error" : undefined}
             placeholder="e.g., Build functional leg strength and improve 5k run pace"
-            onChange={(e) => {
-              setGoal(e.target.value);
+            onChange={(v) => {
+              setGoal(v);
               clear("goal");
             }} />
           <FieldError id="goal" text={errors.goal} />
         </div>
         <div>
           <label htmlFor="start" className={labelCls}>Starting Point <Optional /></label>
-          <input id="start" className={fieldCls()} value={startingPoint} disabled={loading} maxLength={1000}
+          <AutoGrowText id="start" className={fieldCls()} value={startingPoint} disabled={loading} maxLength={1000}
             placeholder="e.g., Desk job, walk a bit, haven't trained in 2 years"
-            onChange={(e) => setStartingPoint(e.target.value)} />
+            onChange={setStartingPoint} />
         </div>
         <div>
           <span className={labelCls}>Preferred Activities <Optional /></span>

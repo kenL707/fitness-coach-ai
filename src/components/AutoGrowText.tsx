@@ -8,14 +8,19 @@ interface Props {
   onChange: (value: string) => void;
   className?: string;
   placeholder?: string;
-  "aria-label": string;
+  "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
+  id?: string;
+  disabled?: boolean;
+  maxLength?: number;
 }
 
 /**
  * A single-line-looking text field that wraps long text onto more lines instead of cutting it off
  * (important on a phone). Enter finishes the edit, so the value never contains line breaks.
  */
-export function AutoGrowText({ value, onChange, className, placeholder, "aria-label": ariaLabel }: Props) {
+export function AutoGrowText({ value, onChange, className, placeholder, id, disabled, maxLength, ...aria }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useLayoutEffect(() => {
@@ -36,9 +41,12 @@ export function AutoGrowText({ value, onChange, className, placeholder, "aria-la
     <textarea
       ref={ref}
       rows={1}
+      id={id}
       value={value}
-      aria-label={ariaLabel}
+      disabled={disabled}
+      maxLength={maxLength}
       placeholder={placeholder}
+      {...aria}
       onChange={(e) => onChange(e.target.value.replace(/\s*\n\s*/g, " "))}
       onKeyDown={blurOnEnter}
       className={cn("block resize-none overflow-hidden", className)}
