@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FitnessCoach AI
 
-## Getting Started
+An AI fitness coach that turns a short intake form into a personalized, week-by-week training plan, then tracks your progress and summarizes what you actually did. No account or login.
 
-First, run the development server:
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Plan dashboard with weekly and since-start summaries" width="760">
+</p>
+
+## What it does
+
+- **Personalized plan from a short form.** Describe a goal, pick your training days and how much time you have on each, and add optional details (starting point, preferred activities, weight, injuries or limits). Claude writes a progressive program around that schedule.
+- **A calm, editable dashboard.** Tick tasks off, and see progress for the week and the whole program. Everything is editable in place: rename tasks, change reps or distances, add your own, delete, and drag to reorder.
+- **Summaries of what you really did.** Open a weekly summary or a since-start summary: tasks you completed are combined by activity (for example, "Running - 14.6 miles - 1,500 kcal"), with a total and a short note. Calories come from your weight when you give it, or a range when you don't. Open summaries refresh themselves when you change the plan.
+- **Works on a phone.** Responsive layout and touch-friendly controls, with text sized so iPhones do not zoom in when you edit.
+
+| Intake form | On a phone |
+| --- | --- |
+| <img src="docs/screenshots/intake.png" alt="Intake form filled in with a half marathon goal" width="420"> | <img src="docs/screenshots/mobile.png" alt="Dashboard on a phone" width="260"> |
+
+## Try it without an API key
+
+On the intake page, click **"or see an example plan"**. It loads a ready-made 4-week half marathon plan with its summaries, with no AI calls, no cost and no wait. Ticking tasks updates the progress bars and summaries live, so you can try the whole app.
+
+## How it works
+
+The interesting parts of the build:
+
+- **Fast plan generation.** A whole program in one request took minutes. Each week is now its own small request, run in parallel, and structured JSON output keeps every reply machine-readable. Generating a 12-week plan takes about ten seconds.
+- **Recovering from imperfect model output.** Every generated week is validated against the days you asked for. A malformed week is retried automatically (up to three times) instead of failing the whole plan. A week that has nothing to schedule is skipped without a model call.
+- **Consistent numbers.** Each task's calories and distance are estimated once from its title and description, saved with the task, and reused by every summary, so the same exercise always gets the same figure. Totals are added up in code, not by the model.
+- **One shared cutoff.** Weekly and since-start summaries count tasks through today (or the latest day you checked off, whichever is later), so the weekly figures add up to the since-start total.
+- **Calendar weeks.** Weeks run Monday to Sunday, with a shorter first week when you start mid-week. Plans saved under the older layout keep their original dates.
+- **Safe by default.** Required-field errors scroll to and focus the first problem. The example plan never touches the API. Real keys stay in `.env.local`, which is git-ignored.
+
+## Tech stack
+
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, the Anthropic SDK (Claude), Zod for validation and structured output schemas, dnd-kit for drag and drop, Lucide icons. Tests use Vitest and Testing Library.
+
+## Run it locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local     # then put your Anthropic API key in .env.local
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`ANTHROPIC_API_KEY` is required for live plan generation. Set `ANTHROPIC_MODEL` to use a different Claude model than the default (`claude-sonnet-5-5`). The example plan works without a key.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test
+```
 
-## Learn More
+120 tests cover intake validation, scheduling, plan parsing and retries, summary totals, and the dashboard's behavior. The API tests use a fake Anthropic client, so they cost nothing and need no key.
 
-To learn more about Next.js, take a look at the following resources:
+## Project layout
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/app/            page, and the API routes (generate-plan, generate-summary, estimate-tasks)
+src/components/     intake form, weekly plan, task list, summaries, confirm dialog
+src/lib/            fitness.ts (schemas, scheduling, totals), ai.ts, estimate.ts, sample.ts
+src/test/           shared test setup, fixtures and the fake Anthropic client
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Product decisions
 
-## Deploy on Vercel
+A few choices made while iterating on the design:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Less text, more signal.** No task counts or calories on every row, no "Rest" labels, short plan descriptions. Detail lives in the summaries.
+- **No warm-up or stretching tasks unless the goal needs them.** They inflate the progress bar and every person's routine differs.
+- **No login.** The plan lives in your browser. That keeps the first minute frictionless, at the cost of no cross-device sync.
+- **New plan starts blank.** Prefilling the old answers carried stale dates and goals more often than it saved typing.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## What I'd build next
+
+- Adjust upcoming weeks based on progress ("make next week easier").
+- Export or back up a plan, since it lives in one browser.
+- Add sessions to a calendar for reminders.
+
+## How it was built
+
+Built with [Claude Code](https://claude.com/claude-code) in VS Code through iterative prompting and review, using Git and GitHub for version control. I directed the product decisions and reviewed the results along the way.
