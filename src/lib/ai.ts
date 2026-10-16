@@ -43,6 +43,18 @@ export function responseText(response: Anthropic.Message): string {
 /** Map any thrown error to a 500 JSON response with a useful message. */
 export function errorResponse(err: unknown) {
   console.error("AI request failed", err);
+
+  // On a deployed demo, visitors get plain-language messages and a way forward; the details stay in the
+  // server log above. (Local development keeps the detailed messages below.)
+  if (process.env.NODE_ENV === "production" && err instanceof Anthropic.APIError) {
+    const busy = err instanceof Anthropic.RateLimitError || (err.status ?? 0) >= 500 || err.status === 429;
+    return fail(
+      busy
+        ? "The AI service is busy right now. Please try again in a moment."
+        : "Live generation is unavailable right now. Please try again later, or try the example plan.",
+    );
+  }
+
   if (err instanceof Anthropic.AuthenticationError) return fail("Anthropic rejected the API key. Check ANTHROPIC_API_KEY.");
   if (err instanceof Anthropic.NotFoundError) return fail(`Model "${MODEL}" was not found. Set ANTHROPIC_MODEL to a valid model.`);
   if (err instanceof Anthropic.RateLimitError) return fail("Rate limited by Anthropic. Please retry shortly.");

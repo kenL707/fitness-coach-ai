@@ -196,6 +196,29 @@ describe("POST /api/generate-plan: recovering from bad model output", () => {
     expect(res.status).toBe(200);
   });
 
+  it("on a deployed demo, shows visitors plain messages and never billing or key details", async () => {
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const apiError = (Cls: unknown, message: string, status: number) => Object.assign(new (Cls as new (m: string) => Error)(message), { status });
+    vi.stubEnv("NODE_ENV", "production");
+    const messageFor = async (err: Error) => {
+      create.mockReset();
+      create.mockRejectedValue(err);
+      const res = await call(body({ programLengthWeeks: 1 }));
+      expect(res.status).toBe(500);
+      return ((await res.json()) as { error: string }).error;
+    };
+
+    const credits = await messageFor(apiError(Anthropic.APIError, "Your credit balance is too low to access the Anthropic API.", 400));
+    const badKey = await messageFor(apiError(Anthropic.AuthenticationError, "invalid x-api-key", 401));
+    const busy = await messageFor(apiError(Anthropic.RateLimitError, "rate limited", 429));
+    const overloaded = await messageFor(apiError(Anthropic.APIError, "overloaded", 529));
+    vi.unstubAllEnvs();
+
+    for (const m of [credits, badKey]) expect(m).toMatch(/unavailable right now.*example plan/i);
+    for (const m of [busy, overloaded]) expect(m).toMatch(/busy right now/i);
+    for (const m of [credits, badKey, busy, overloaded]) expect(m).not.toMatch(/credit|billing|console\.anthropic|api key|ANTHROPIC/i);
+  });
+
   it("reports a refusal and API errors as 500s with a useful message", async () => {
     create.mockImplementation(async (args: Args) => (isHeader(args) ? reply({ programTitle: "T", summary: "s" }) : { stop_reason: "refusal", content: [] }));
     const refused = await call(body({ programLengthWeeks: 1 }));
