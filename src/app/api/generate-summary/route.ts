@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { MISSING_KEY, MODEL, errorResponse, extractJson, fail, hasApiKey, responseText } from "@/lib/ai";
+import { missingKeyMessage, MODEL, errorResponse, extractJson, fail, hasApiKey, responseText } from "@/lib/ai";
 import {
   caloriesRange,
   dateFor,
@@ -109,7 +109,7 @@ const dayLabel = (iso: string) =>
 
 export async function POST(req: Request) {
   try {
-    if (!hasApiKey()) return fail(MISSING_KEY);
+    if (!hasApiKey()) return fail(missingKeyMessage());
 
     const raw = await req.json().catch(() => null);
     const body = bodySchema.safeParse(raw);

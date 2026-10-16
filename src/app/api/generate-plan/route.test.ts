@@ -56,6 +56,17 @@ describe("POST /api/generate-plan: request handling", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it("points visitors of a deployed demo (no key) to the example plan instead of to setup steps", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    delete process.env.ANTHROPIC_API_KEY;
+    const res = await call(body());
+    vi.unstubAllEnvs();
+    expect(res.status).toBe(500);
+    const { error } = await res.json();
+    expect(error).toMatch(/example plan/i);
+    expect(error).not.toMatch(/\.env\.local|ANTHROPIC_API_KEY/);
+  });
+
   it("returns 400 for a body that is not JSON", async () => {
     const res = await call("{nope", true);
     expect(res.status).toBe(400);

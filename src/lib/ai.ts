@@ -6,7 +6,15 @@ export const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
 export const hasApiKey = () => !!process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== "your_key_here";
 
-export const MISSING_KEY = "ANTHROPIC_API_KEY is not set. Add it to .env.local and restart the dev server.";
+/**
+ * What to tell the caller when there is no API key. Developers running locally get the fix; visitors to a
+ * deployed demo (which deliberately has no key) are pointed to the example plan instead of to setup steps.
+ */
+export function missingKeyMessage() {
+  return process.env.NODE_ENV === "production"
+    ? "Live plan generation isn't turned on for this demo, so only the example plan is available. Click \"or see an example plan\" below the form to try the app."
+    : "ANTHROPIC_API_KEY is not set. Add it to .env.local and restart the dev server.";
+}
 
 export const fail = (message: string, status = 500) => NextResponse.json({ error: message }, { status });
 

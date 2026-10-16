@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { NextResponse } from "next/server";
-import { MISSING_KEY, MODEL, errorResponse, extractJson, fail, hasApiKey, responseText } from "@/lib/ai";
+import { missingKeyMessage, MODEL, errorResponse, extractJson, fail, hasApiKey, responseText } from "@/lib/ai";
 import {
   headerSchema,
   intakeSchema,
@@ -143,7 +143,7 @@ async function generateHeader(client: Anthropic, intake: Intake) {
 
 export async function POST(req: Request) {
   try {
-    if (!hasApiKey()) return fail(MISSING_KEY);
+    if (!hasApiKey()) return fail(missingKeyMessage());
 
     let body: unknown;
     try {

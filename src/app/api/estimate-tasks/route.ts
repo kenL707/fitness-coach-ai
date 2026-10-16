@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { MISSING_KEY, errorResponse, fail, hasApiKey } from "@/lib/ai";
+import { missingKeyMessage, errorResponse, fail, hasApiKey } from "@/lib/ai";
 import { estimateTasks } from "@/lib/estimate";
 import { intakeSchema, type TaskEstimate } from "@/lib/fitness";
 
@@ -15,7 +15,7 @@ const bodySchema = z.object({
 /** Estimates calories and quantities for task texts. The page saves the results with the tasks. */
 export async function POST(req: Request) {
   try {
-    if (!hasApiKey()) return fail(MISSING_KEY);
+    if (!hasApiKey()) return fail(missingKeyMessage());
     const body = bodySchema.safeParse(await req.json().catch(() => null));
     const intake = intakeSchema.safeParse(body.success ? body.data.intake : null);
     if (!body.success || !intake.success) return fail("Invalid request.", 400);
