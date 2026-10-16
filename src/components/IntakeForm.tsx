@@ -261,19 +261,17 @@ export function IntakeForm({ loading, onSubmit, onExample }: Props) {
       <Chunk icon={CalendarDays} title="Schedule">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="weeks" className={labelCls}>Program Length (weeks)</label>
-            <input id="weeks" type="number" min={WEEKS.min} max={WEEKS.max} inputMode="numeric"
-              className={fieldCls(invalid.has("weeks"))} value={weeks} disabled={loading}
+            <label htmlFor="weeks" className={labelCls}>Program Length</label>
+            <select id="weeks" className={fieldCls(invalid.has("weeks"))} value={weeks} disabled={loading}
               onChange={(e) => {
                 setWeeks(e.target.value);
                 clear("weeks");
-              }}
-              onBlur={() => {
-                const n = parseFloat(weeks);
-                if (Number.isFinite(n)) setWeeks(String(clamp(Math.round(n), WEEKS.min, WEEKS.max)));
-              }} />
+              }}>
+              {Array.from({ length: WEEKS.max - WEEKS.min + 1 }, (_, i) => WEEKS.min + i).map((n) => (
+                <option key={n} value={n}>{n} {n === 1 ? "week" : "weeks"}</option>
+              ))}
+            </select>
             <FieldError id="weeks" text={errors.weeks} />
-            <p className="mt-1 text-xs text-slate-500">1 to 12 weeks</p>
           </div>
           <div>
             <label htmlFor="date" className={labelCls}>Start Date</label>

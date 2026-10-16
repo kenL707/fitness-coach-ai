@@ -82,17 +82,29 @@ describe("IntakeForm validation", () => {
     expect(onSubmit.mock.calls[0][0].currentWeight).toBeUndefined();
   });
 
-  it("clamps program length into 1-12 weeks when you leave the field", async () => {
+  it("offers program length as a 1-12 week dropdown, defaulting to 8", async () => {
     const { user } = setup();
-    const weeks = screen.getByLabelText("Program Length (weeks)") as HTMLInputElement;
-    await user.clear(weeks);
-    await user.type(weeks, "99");
-    await user.tab();
+    const weeks = screen.getByLabelText("Program Length") as HTMLSelectElement;
+    expect(weeks.tagName).toBe("SELECT");
+    const options = within(weeks).getAllByRole("option").map((o) => o.textContent);
+    expect(options).toHaveLength(12);
+    expect(options[0]).toBe("1 week"); // singular
+    expect(options[1]).toBe("2 weeks");
+    expect(options.at(-1)).toBe("12 weeks");
+    expect(weeks.value).toBe("8");
+
+    await user.selectOptions(weeks, "12");
     expect(weeks.value).toBe("12");
-    await user.clear(weeks);
-    await user.type(weeks, "0");
-    await user.tab();
-    expect(weeks.value).toBe("1");
+  });
+
+  it("submits the chosen program length", async () => {
+    const { onSubmit, user } = setup();
+    await user.type(goal(), "x");
+    await user.click(day("Mon"));
+    await user.selectOptions(duration("Monday"), "30 minutes");
+    await user.selectOptions(screen.getByLabelText("Program Length"), "3");
+    await user.click(submit());
+    expect(onSubmit.mock.calls[0][0].programLengthWeeks).toBe(3);
   });
 });
 
