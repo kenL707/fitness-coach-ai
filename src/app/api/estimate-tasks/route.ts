@@ -5,7 +5,7 @@ import { missingKeyMessage, errorResponse, fail, hasApiKey } from "@/lib/ai";
 import { estimateTasks } from "@/lib/estimate";
 import { intakeSchema, type TaskEstimate } from "@/lib/fitness";
 
-export const maxDuration = 90;
+export const maxDuration = 60; // seconds; a plan takes ~10s, and this stays within the free Vercel plan limit
 
 const bodySchema = z.object({
   intake: z.unknown(),
