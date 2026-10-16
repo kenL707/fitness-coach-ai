@@ -2,6 +2,8 @@
 
 An AI fitness coach that turns a short intake form into a personalized, week-by-week training plan, then tracks your progress and summarizes what you actually did. No account or login.
 
+**[Try the live demo](https://fitness-coach-ai-roan.vercel.app/)**
+
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Plan dashboard with weekly and since-start summaries" width="760">
 </p>
@@ -17,9 +19,14 @@ An AI fitness coach that turns a short intake form into a personalized, week-by-
 | --- | --- |
 | <img src="docs/screenshots/intake.png" alt="Intake form filled in with a half marathon goal" width="420"> | <img src="docs/screenshots/mobile.png" alt="Dashboard on a phone" width="260"> |
 
-## Try it without an API key
+## Try it
 
-On the intake page, click **"or see an example plan"**. It loads a ready-made 4-week half marathon plan with its summaries, with no AI calls, no cost and no wait. Ticking tasks updates the progress bars and summaries live, so you can try the whole app.
+Open the [live demo](https://fitness-coach-ai-roan.vercel.app/). You have two ways in:
+
+- **Generate your own plan.** Fill in the form and click **Generate Fitness Plan**. A plan takes about 10 to 20 seconds.
+- **See an example first.** Click **"or see an example plan"** at the bottom of the form. It loads a ready-made 4-week half marathon plan with its summaries, with no AI call and no wait. Ticking tasks updates the progress bars and summaries live, so you can try the whole app.
+
+If live generation is ever unavailable (for example, the demo's usage budget is used up), the app says so and the example plan still works.
 
 ## How it works
 
