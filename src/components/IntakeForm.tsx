@@ -189,6 +189,16 @@ export function IntakeForm({ loading, onSubmit, onExample }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      {onExample && (
+        <p className="text-sm text-slate-400">
+          New here?{" "}
+          <button type="button" onClick={onExample} disabled={loading}
+            className="font-medium text-emerald-300 underline-offset-4 transition hover:underline disabled:opacity-50">
+            See an example plan
+          </button>
+        </p>
+      )}
+
       {messages.length > 0 && (
         <div role="alert" className="rounded-xl border border-red-500/50 bg-red-950/50 p-4 text-sm text-red-200">
           <p className="mb-1 flex items-center gap-2 font-medium">
@@ -380,12 +390,6 @@ export function IntakeForm({ loading, onSubmit, onExample }: Props) {
         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
         {loading ? "Building your plan..." : "Generate Fitness Plan"}
       </button>
-      {onExample && (
-        <button type="button" onClick={onExample} disabled={loading}
-          className="mx-auto block text-sm text-slate-400 underline-offset-4 transition hover:text-emerald-300 hover:underline disabled:opacity-50">
-          or see an example plan
-        </button>
-      )}
     </form>
   );
 }

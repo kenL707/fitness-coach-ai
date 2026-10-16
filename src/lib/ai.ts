@@ -12,7 +12,7 @@ export const hasApiKey = () => !!process.env.ANTHROPIC_API_KEY && process.env.AN
  */
 export function missingKeyMessage() {
   return process.env.NODE_ENV === "production"
-    ? "Live plan generation isn't turned on for this demo, so only the example plan is available. Click \"or see an example plan\" below the form to try the app."
+    ? "Live plan generation isn't turned on for this demo, so only the example plan is available. Click \"See an example plan\" at the top of the form to try the app."
     : "ANTHROPIC_API_KEY is not set. Add it to .env.local and restart the dev server.";
 }
 
